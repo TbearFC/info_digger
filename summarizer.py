@@ -3,12 +3,11 @@ import os
 
 import anthropic
 
+import db
+
 logger = logging.getLogger(__name__)
 
 _client: anthropic.AsyncAnthropic | None = None
-
-# Preferred model — falls back if unavailable
-_MODEL = "claude-haiku-4-5-20251001"
 
 
 def _get_client() -> anthropic.AsyncAnthropic:
@@ -18,6 +17,10 @@ def _get_client() -> anthropic.AsyncAnthropic:
     return _client
 
 
+def _model() -> str:
+    return os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
+
+
 async def summarize(title: str, description: str) -> str:
     """Return a 1-sentence summary. Returns empty string on any error."""
     if not title and not description:
@@ -25,7 +28,7 @@ async def summarize(title: str, description: str) -> str:
     try:
         client = _get_client()
         message = await client.messages.create(
-            model=_MODEL,
+            model=_model(),
             max_tokens=100,
             messages=[
                 {
@@ -38,7 +41,9 @@ async def summarize(title: str, description: str) -> str:
                 }
             ],
         )
+        db.log_api_call("summarizer", success=True)
         return message.content[0].text.strip()
     except Exception as exc:
         logger.warning("summarize failed for %r: %s", title, exc)
+        db.log_api_call("summarizer", success=False, error_msg=str(exc))
         return ""

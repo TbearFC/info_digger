@@ -15,6 +15,8 @@
       --muted: #64748b;
       --github: #3b82f6;
       --arxiv: #f97316;
+      --huggingface: #22c55e;
+      --twitter: #a855f7;
       --accent: #6366f1;
     }
 
@@ -49,25 +51,6 @@
 
     .logo span { color: var(--muted); font-weight: 400; }
 
-    .search-wrap {
-      flex: 1;
-      max-width: 400px;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 12px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-      transition: border-color .15s;
-    }
-
-    .search-wrap input:focus { border-color: var(--accent); }
-
     .controls {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -91,7 +74,7 @@
       outline: none;
     }
 
-    .source-filters { display: flex; gap: 8px; }
+    .source-filters { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .source-btn {
       padding: 5px 12px;
@@ -104,14 +87,118 @@
       transition: all .15s;
     }
 
-    .source-btn.active-github { border-color: var(--github); color: var(--github); background: rgba(59,130,246,.1); }
-    .source-btn.active-arxiv  { border-color: var(--arxiv);  color: var(--arxiv);  background: rgba(249,115,22,.1); }
-    .source-btn.active-all    { border-color: var(--accent);  color: var(--accent); background: rgba(99,102,241,.1); }
+    .source-btn.active-github     { border-color: var(--github);     color: var(--github);     background: rgba(59,130,246,.1); }
+    .source-btn.active-arxiv      { border-color: var(--arxiv);      color: var(--arxiv);      background: rgba(249,115,22,.1); }
+    .source-btn.active-huggingface{ border-color: var(--huggingface);color: var(--huggingface);background: rgba(34,197,94,.1); }
+    .source-btn.active-twitter    { border-color: var(--twitter);    color: var(--twitter);    background: rgba(168,85,247,.1); }
+    .source-btn.active-all        { border-color: var(--accent);     color: var(--accent);     background: rgba(99,102,241,.1); }
+
+    /* Research assistant panel */
+    .ask-panel {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px 24px 0;
+    }
+
+    .ask-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ask-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .ask-input:focus { border-color: var(--accent); }
+    .ask-input::placeholder { color: var(--muted); }
+
+    .ask-btn {
+      padding: 9px 18px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+
+    .ask-btn:hover { opacity: .85; }
+    .ask-btn:disabled { opacity: .4; cursor: default; }
+
+    .ask-answer {
+      margin-top: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      display: none;
+    }
+
+    .ask-answer.visible { display: block; }
+
+    .ask-answer-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .ask-sources {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ask-sources a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .ask-sources a:hover { color: var(--accent); }
+
+    /* Activity chart */
+    .chart-wrap {
+      max-width: 800px;
+      margin: 16px auto 0;
+      padding: 0 24px;
+    }
+
+    .chart-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    .chart-empty {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    svg.chart { width: 100%; height: 120px; display: block; }
 
     main {
       max-width: 800px;
       margin: 0 auto;
-      padding: 32px 24px 80px;
+      padding: 24px 24px 80px;
     }
 
     .month-group { margin-bottom: 32px; }
@@ -144,8 +231,10 @@
       flex-shrink: 0;
     }
 
-    .dot-github { background: var(--github); }
-    .dot-arxiv  { background: var(--arxiv); }
+    .dot-github      { background: var(--github); }
+    .dot-arxiv       { background: var(--arxiv); }
+    .dot-huggingface { background: var(--huggingface); }
+    .dot-twitter     { background: var(--twitter); }
 
     .entry-body { flex: 1; min-width: 0; }
 
@@ -176,8 +265,10 @@
       flex-shrink: 0;
     }
 
-    .badge-github { background: rgba(59,130,246,.15); color: var(--github); }
-    .badge-arxiv  { background: rgba(249,115,22,.15); color: var(--arxiv); }
+    .badge-github      { background: rgba(59,130,246,.15);  color: var(--github); }
+    .badge-arxiv       { background: rgba(249,115,22,.15);  color: var(--arxiv); }
+    .badge-huggingface { background: rgba(34,197,94,.15);   color: var(--huggingface); }
+    .badge-twitter     { background: rgba(168,85,247,.15);  color: var(--twitter); }
 
     .entry-summary {
       color: var(--muted);
@@ -232,27 +323,12 @@
     }
 
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-    .stats-bar {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 20px;
-    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">info_digger <span>/ AI timeline</span></div>
-  <div class="search-wrap">
-    <input
-      type="text"
-      id="search-input"
-      placeholder="Search... (coming soon)"
-      readonly
-      title="Research assistant coming in Phase 2"
-    >
-  </div>
 </header>
 
 <div class="controls">
@@ -268,8 +344,34 @@
       <button class="source-btn active-all" data-source="" id="btn-all">All</button>
       <button class="source-btn" data-source="github" id="btn-github">GitHub</button>
       <button class="source-btn" data-source="arxiv" id="btn-arxiv">arXiv</button>
+      <button class="source-btn" data-source="huggingface" id="btn-huggingface">HuggingFace</button>
+      <button class="source-btn" data-source="twitter" id="btn-twitter">Twitter</button>
     </div>
   </div>
+</div>
+
+<!-- Research assistant -->
+<div class="ask-panel">
+  <div class="ask-row">
+    <input
+      type="text"
+      class="ask-input"
+      id="ask-input"
+      placeholder="Ask anything: e.g. What happened with RAG this month?"
+    >
+    <button class="ask-btn" id="ask-btn">Ask</button>
+  </div>
+  <div class="ask-answer" id="ask-answer">
+    <div class="ask-answer-label">Answer</div>
+    <div id="ask-answer-text"></div>
+    <div class="ask-sources" id="ask-sources"></div>
+  </div>
+</div>
+
+<!-- Activity chart -->
+<div class="chart-wrap">
+  <div class="chart-label">Topic activity over time</div>
+  <div id="chart-container"><div class="chart-empty">Loading chart...</div></div>
 </div>
 
 <main id="main">
@@ -284,13 +386,37 @@
   let loading = false;
   const LIMIT = 50;
 
-  // Search box: show coming-soon
-  document.getElementById('search-input').addEventListener('focus', function() {
-    this.blur();
-    alert('Research assistant coming in Phase 2 — ask questions like "what happened with RAG this month?"');
+  const SOURCE_COLORS = {
+    github: '#3b82f6',
+    arxiv: '#f97316',
+    huggingface: '#22c55e',
+    twitter: '#a855f7',
+  };
+
+  // Source filter buttons
+  document.querySelectorAll('.source-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.source-btn').forEach(b => { b.className = 'source-btn'; });
+      const src = btn.dataset.source;
+      btn.className = src ? `source-btn active-${src}` : 'source-btn active-all';
+      currentSource = src;
+      reset();
+    });
   });
 
-  // Load topics
+  document.getElementById('topic-select').addEventListener('change', function() {
+    currentTopic = this.value;
+    reset();
+  });
+
+  function reset() {
+    offset = 0;
+    document.getElementById('main').innerHTML = '<div class="loading">Loading...</div>';
+    loadEntries(true);
+    loadChart();
+  }
+
+  // ── Load topics ──────────────────────────────────────────────────────────
   async function loadTopics() {
     try {
       const res = await fetch(API + '/api/topics');
@@ -307,43 +433,135 @@
     }
   }
 
-  // Source filter buttons
-  document.querySelectorAll('.source-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.source-btn').forEach(b => {
-        b.className = 'source-btn';
-      });
-      const src = btn.dataset.source;
-      if (src === '') {
-        btn.className = 'source-btn active-all';
-      } else {
-        btn.className = `source-btn active-${src}`;
+  // ── Activity chart ───────────────────────────────────────────────────────
+  async function loadChart() {
+    const container = document.getElementById('chart-container');
+    try {
+      const params = new URLSearchParams();
+      if (currentTopic) params.set('topic', currentTopic);
+      const res = await fetch(API + '/api/stats?' + params);
+      const data = await res.json();
+
+      if (data.length < 2) {
+        container.innerHTML = '<div class="chart-empty">数据积累中，暂无趋势图</div>';
+        return;
       }
-      currentSource = src;
-      reset();
+
+      container.innerHTML = renderChart(data);
+    } catch (e) {
+      container.innerHTML = '';
+    }
+  }
+
+  function renderChart(data) {
+    const W = 800, H = 120, PAD = { top: 10, right: 10, bottom: 24, left: 30 };
+    const innerW = W - PAD.left - PAD.right;
+    const innerH = H - PAD.top - PAD.bottom;
+
+    // Detect which sources have data
+    const activeSources = Object.keys(SOURCE_COLORS).filter(src =>
+      data.some(d => d[src] > 0)
+    );
+    if (activeSources.length === 0) {
+      return '<div class="chart-empty">数据积累中，暂无趋势图</div>';
+    }
+
+    const months = data.map(d => d.month);
+    const maxVal = Math.max(1, ...data.flatMap(d => activeSources.map(s => d[s] || 0)));
+
+    const xScale = i => PAD.left + (i / (months.length - 1)) * innerW;
+    const yScale = v => PAD.top + innerH - (v / maxVal) * innerH;
+
+    let paths = '';
+    activeSources.forEach(src => {
+      const points = data.map((d, i) => `${xScale(i)},${yScale(d[src] || 0)}`).join(' ');
+      paths += `<polyline points="${points}" fill="none" stroke="${SOURCE_COLORS[src]}" stroke-width="1.5" opacity="0.85">`;
+      // Hover tooltips on each data point
+      data.forEach((d, i) => {
+        if (d[src]) {
+          paths += `<circle cx="${xScale(i)}" cy="${yScale(d[src])}" r="3" fill="${SOURCE_COLORS[src]}"><title>${d.month} · ${src}: ${d[src]}</title></circle>`;
+        }
+      });
+      paths += `</polyline>`;
     });
-  });
 
-  document.getElementById('topic-select').addEventListener('change', function() {
-    currentTopic = this.value;
-    reset();
-  });
+    // X-axis labels (show every Nth month to avoid overlap)
+    const step = Math.max(1, Math.floor(months.length / 6));
+    let xlabels = '';
+    months.forEach((m, i) => {
+      if (i % step === 0 || i === months.length - 1) {
+        xlabels += `<text x="${xScale(i)}" y="${H - 4}" fill="#64748b" font-size="9" text-anchor="middle">${m}</text>`;
+      }
+    });
 
-  function reset() {
-    offset = 0;
-    document.getElementById('main').innerHTML = '<div class="loading">Loading...</div>';
-    loadEntries(true);
+    // Y-axis label
+    const ylabel = `<text x="${PAD.left - 4}" y="${PAD.top + innerH / 2}" fill="#64748b" font-size="9" text-anchor="middle" transform="rotate(-90,${PAD.left - 14},${PAD.top + innerH / 2})">${maxVal}</text>`;
+
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${ylabel}${paths}${xlabels}</svg>`;
   }
 
-  // Group entries by YYYY-MM
-  function monthKey(iso) {
-    return iso ? iso.slice(0, 7) : 'unknown';
+  // ── Research assistant ───────────────────────────────────────────────────
+  const askInput = document.getElementById('ask-input');
+  const askBtn = document.getElementById('ask-btn');
+  const askAnswer = document.getElementById('ask-answer');
+  const askAnswerText = document.getElementById('ask-answer-text');
+  const askSources = document.getElementById('ask-sources');
+
+  async function doAsk() {
+    const question = askInput.value.trim();
+    if (!question) return;
+
+    askBtn.disabled = true;
+    askBtn.textContent = '...';
+    askAnswer.classList.remove('visible');
+
+    try {
+      const res = await fetch(API + '/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, topic: currentTopic || null }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        askAnswerText.textContent = data.detail?.message || 'Error: service unavailable';
+        askSources.innerHTML = '';
+      } else {
+        askAnswerText.textContent = data.answer;
+        if (data.sources && data.sources.length) {
+          const top5 = data.sources.slice(0, 5);
+          askSources.innerHTML = 'Sources: ' + top5.map(s =>
+            `<a href="${escHtml(s.url)}" target="_blank" rel="noopener">${escHtml(s.title)}</a>`
+          ).join(' · ');
+        } else {
+          askSources.innerHTML = '';
+        }
+      }
+      askAnswer.classList.add('visible');
+    } catch (e) {
+      askAnswerText.textContent = 'Failed to reach server.';
+      askAnswer.classList.add('visible');
+    } finally {
+      askBtn.disabled = false;
+      askBtn.textContent = 'Ask';
+    }
   }
+
+  askBtn.addEventListener('click', doAsk);
+  askInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAsk(); });
+
+  // ── Timeline ─────────────────────────────────────────────────────────────
+  function monthKey(iso) { return iso ? iso.slice(0, 7) : 'unknown'; }
 
   function monthLabel(key) {
     if (key === 'unknown') return 'Unknown';
     const [y, m] = key.split('-');
     return new Date(+y, +m - 1).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  }
+
+  function sourceBadgeLabel(source) {
+    const labels = { github: 'GitHub', arxiv: 'arXiv', huggingface: 'HuggingFace', twitter: 'Twitter' };
+    return labels[source] || source;
   }
 
   function renderEntries(entries, append) {
@@ -357,11 +575,9 @@
       }
     }
 
-    // Remove old load-more
     const oldBtn = document.getElementById('load-more-btn');
     if (oldBtn) oldBtn.parentElement.remove();
 
-    // Group by month
     const groups = {};
     entries.forEach(e => {
       const k = monthKey(e.published_at);
@@ -370,7 +586,6 @@
     });
 
     Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).forEach(([key, items]) => {
-      // Find or create month group
       let group = document.querySelector(`[data-month="${key}"]`);
       if (!group) {
         group = document.createElement('div');
@@ -383,14 +598,13 @@
       items.forEach(entry => {
         const div = document.createElement('div');
         div.className = 'entry';
-        const tagsHtml = (entry.topic_tags || [])
-          .map(t => `<span class="tag">${t}</span>`).join('');
+        const tagsHtml = (entry.topic_tags || []).map(t => `<span class="tag">${escHtml(t)}</span>`).join('');
         div.innerHTML = `
           <div class="dot dot-${entry.source}"></div>
           <div class="entry-body">
             <div class="entry-title">
-              <a href="${entry.url}" target="_blank" rel="noopener">${escHtml(entry.title)}</a>
-              <span class="badge badge-${entry.source}">${entry.source === 'github' ? 'GitHub' : 'arXiv'}</span>
+              <a href="${escHtml(entry.url)}" target="_blank" rel="noopener">${escHtml(entry.title)}</a>
+              <span class="badge badge-${entry.source}">${sourceBadgeLabel(entry.source)}</span>
             </div>
             ${entry.summary ? `<div class="entry-summary">${escHtml(entry.summary)}</div>` : ''}
             ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
@@ -399,7 +613,6 @@
       });
     });
 
-    // Load more button
     if (entries.length === LIMIT) {
       const wrap = document.createElement('div');
       wrap.className = 'load-more-wrap';
@@ -444,6 +657,7 @@
   // Init
   loadTopics();
   loadEntries(false);
+  loadChart();
 </script>
 </body>
 </html>

@@ -1,12 +1,17 @@
 import asyncio
 import logging
+import os
 
 import db
-from crawlers import arxiv, github
+from crawlers import arxiv, github, huggingface
 from summarizer import summarize
 from topics import tag_entry
 
 logger = logging.getLogger(__name__)
+
+
+def _twitter_enabled() -> bool:
+    return os.getenv("TWITTER_ENABLED", "false").lower() == "true"
 
 
 async def _process_items(items: list[dict]) -> int:
@@ -37,20 +42,35 @@ async def _process_items(items: list[dict]) -> int:
 
 
 async def run_crawl() -> None:
-    """Fetch new items from GitHub + arXiv RSS concurrently, then process."""
+    """Fetch new items from all enabled sources concurrently, then process."""
     logger.info("Starting crawl cycle...")
-    github_items, arxiv_items = await asyncio.gather(
+
+    crawl_coros = [
         github.fetch_new(),
         arxiv.fetch_rss(),
-    )
-    all_items = github_items + arxiv_items
+        huggingface.fetch_new(),
+    ]
+
+    if _twitter_enabled():
+        from crawlers import twitter
+        crawl_coros.append(twitter.fetch_new())
+
+    results = await asyncio.gather(*crawl_coros, return_exceptions=True)
+
+    all_items = []
+    for r in results:
+        if isinstance(r, Exception):
+            logger.warning("Crawl source error: %s", r)
+        else:
+            all_items.extend(r)
+
     logger.info("Crawl fetched %d items total", len(all_items))
     stored = await _process_items(all_items)
     logger.info("Crawl cycle complete: %d new items stored", stored)
 
 
 async def run_backfill() -> None:
-    """One-time historical backfill. GitHub first (fast), then arXiv (slow)."""
+    """One-time historical backfill. GitHub + HuggingFace + arXiv (no Twitter — RSS has no history)."""
     logger.info("Starting historical backfill...")
 
     github_items = await github.backfill(since="2025-12-01")
@@ -58,10 +78,18 @@ async def run_backfill() -> None:
     gh_stored = await _process_items(github_items)
     logger.info("GitHub backfill: %d new items stored", gh_stored)
 
+    hf_items = await huggingface.fetch_new()
+    logger.info("HuggingFace backfill: %d items fetched", len(hf_items))
+    hf_stored = await _process_items(hf_items)
+    logger.info("HuggingFace backfill: %d new items stored", hf_stored)
+
     logger.info("Starting arXiv backfill (this may take 30-90 minutes)...")
     arxiv_items = await arxiv.backfill(months=3)
     logger.info("arXiv backfill: %d items fetched", len(arxiv_items))
     ax_stored = await _process_items(arxiv_items)
     logger.info("arXiv backfill: %d new items stored", ax_stored)
 
-    logger.info("Backfill complete. Total stored: %d", gh_stored + ax_stored)
+    logger.info(
+        "Backfill complete. Total stored: %d",
+        gh_stored + hf_stored + ax_stored,
+    )
