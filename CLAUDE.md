@@ -15,67 +15,78 @@ Or with Docker:
 docker-compose up
 ```
 
-Open `http://localhost:8000`. On first start, a one-time historical backfill runs (arXiv takes 30–90 min), then crawls every 60 minutes. A `.backfilled` sentinel file prevents repeat backfills; set `DB_BACKFILLED=1` in `.env` to skip it permanently.
+Open `http://localhost:8000`. On first start, a one-time historical backfill runs (arXiv takes 30–90 min), then crawls every 60 minutes. A `.backfilled` sentinel file prevents repeat backfills; set `DB_BACKFILLED=1` in `.env` to skip permanently.
 
 ## Architecture
 
-The pipeline flows: **crawl → dedup → tag → summarize → store → serve**.
+Pipeline: **crawl → dedup → tag → summarize → store → serve**
 
 ```
-crawlers/github.py   crawlers/arxiv.py   crawlers/huggingface.py   crawlers/twitter.py*
-        └──────────────────────┬──────────────────────────────────┘
-                               ▼
-                         pipeline.py          ← orchestrator; asyncio.gather for concurrent fetch
-                         hash_exists()        ← dedup via content_hash (SHA-256)
-                         tag_entry()          ← topics.py keyword match → list[str]
-                         summarize()          ← summarizer.py → Claude API 1-sentence
-                         insert_entry()       ← db.py SQLite (WAL mode)
-                               ▼
-                         FastAPI (main.py)
-                         GET  /api/entries    ← filtered by topic, source, offset
-                         GET  /api/topics     ← distinct tags from DB
-                         GET  /api/stats      ← monthly counts per source (for SVG chart)
-                         POST /api/ask        ← research assistant (Claude API, non-streaming)
-                         GET  /admin/health   ← crawler status + Claude API success rate
-                         GET  /              ← static/index.html (vanilla JS)
-```
+crawlers/
+  github.py        fetch_new() + backfill()   GitHub Search API
+  arxiv.py         fetch_rss() + backfill()   arXiv RSS + Search API (3s delay, ToS)
+  huggingface.py   fetch_new()                HF Models API (100 latest)
+  twitter.py       fetch_new()                Nitter RSS — disabled by default
 
-*Twitter/Nitter is disabled by default (`TWITTER_ENABLED=false`). Also excluded from `run_backfill()` — RSS has no history.
+          └──────────────────┬───────────────────┘
+                             ▼
+                       pipeline.py
+                         run_crawl()      asyncio.gather all enabled sources
+                         run_backfill()   GitHub + HuggingFace + arXiv only (no Twitter)
+                         _process_items() dedup → tag → summarize → insert
+                             ▼
+             ┌───────────────┼────────────────┐
+          topics.py      summarizer.py      db.py
+          tag_entry()    summarize()        SQLite WAL
+          keyword match  Claude API         entries + api_calls tables
+          → list[str]    max_tokens=100     log_api_call()
+          zero tags      returns "" on err
+          → item dropped
+                             ▼
+                       main.py  (FastAPI)
+                         GET  /api/entries     topic + source + offset filter
+                         GET  /api/topics      distinct tags
+                         GET  /api/stats       monthly counts per source (SVG chart)
+                         POST /api/ask         NL research assistant, max_tokens=500
+                         GET  /admin/health    crawler status + Claude API success rate
+                         GET  /               static/index.html
+```
 
 **Key design decisions:**
-- SQLite WAL mode — safe concurrent reads (FastAPI) + writes (pipeline); no extra locking needed at MVP scale
-- `content_hash`: GitHub/arXiv/Twitter = `sha256(title + url)`; HuggingFace = `sha256(modelId)` — crawlers are idempotent
-- Topic tagging is keyword-based (no LLM) — `topics.py::TOPICS` dict; entries with zero tags are **dropped**
-- `summarizer.py` and `POST /api/ask` both read model from `CLAUDE_MODEL` env var; all Claude API calls write to `api_calls` table for health monitoring
-- Summarizer returns `""` on error — never blocks ingestion
+- SQLite WAL mode — concurrent reads (FastAPI) + writes (pipeline) with no extra locking at MVP scale
+- `content_hash`: GitHub/arXiv/Twitter = `sha256(title+url)`; HuggingFace = `sha256(modelId)` — all crawls are idempotent
+- Topic tagging is keyword-based (no LLM) — zero-tag items are **silently dropped**
+- `summarizer.py` and `/api/ask` both use `CLAUDE_MODEL` env var; every Claude call writes to `api_calls` table
+- Twitter excluded from `run_backfill()` — Nitter RSS has no history; `TWITTER_ENABLED=false` by default
+- `/api/ask` injects up to 50 context entries (300 chars each); drops to 30 if estimated token count > 7000
 
 ## Environment variables
 
 | Variable | Required | Default | Notes |
 |----------|----------|---------|-------|
 | `ANTHROPIC_API_KEY` | Yes | — | Claude API key |
-| `DB_PATH` | No | `./data/info_digger.db` | SQLite path; `db.init()` auto-creates parent dir |
-| `CLAUDE_MODEL` | No | `claude-haiku-4-5-20251001` | Used by summarizer + `/api/ask` |
-| `GITHUB_TOKEN` | No | — | Raises rate limit from 60 → 5000 req/hr |
-| `DB_BACKFILLED` | No | — | Set to `1` to skip backfill on restart |
+| `DB_PATH` | No | `./data/info_digger.db` | `db.init()` auto-creates parent dir |
+| `CLAUDE_MODEL` | No | `claude-haiku-4-5-20251001` | Summarizer + `/api/ask` |
+| `GITHUB_TOKEN` | No | — | Rate limit 60 → 5000 req/hr |
+| `DB_BACKFILLED` | No | — | Set `1` to skip backfill on restart |
 | `HF_API_TOKEN` | No | — | Raises HuggingFace rate limit |
-| `TWITTER_ENABLED` | No | `false` | Set to `true` to enable Nitter crawler |
-| `NITTER_URL` | No | — | Required when Twitter enabled; nitter.net is offline — supply your own instance |
-| `TWITTER_ACCOUNTS` | No | `karpathy,ylecun,sama` | Comma-separated accounts to track |
+| `TWITTER_ENABLED` | No | `false` | Set `true` to enable Nitter crawler |
+| `NITTER_URL` | No | — | Required when Twitter enabled; nitter.net is offline |
+| `TWITTER_ACCOUNTS` | No | `karpathy,ylecun,sama` | Comma-separated accounts |
 
 ## Database schema
 
-Two tables, both created in `db.init()`:
+Both tables created in `db.init()` via `CREATE TABLE IF NOT EXISTS` — safe for upgrades.
 
-- **`entries`** — all ingested items. Key fields: `source`, `url`, `title`, `summary`, `topic_tags` (JSON array), `published_at` (ISO8601 naive UTC), `content_hash` (UNIQUE)
-- **`api_calls`** — Claude API call log for health monitoring. Fields: `called_at`, `caller` (`"summarizer"` or `"ask"`), `success` (0/1), `error_msg`
+- **`entries`** — `source`, `url`, `title`, `summary`, `topic_tags` (JSON array), `published_at` (ISO8601 naive UTC), `content_hash` (UNIQUE), `fetched_at`
+- **`api_calls`** — `called_at`, `caller` (`"summarizer"` | `"ask"`), `success` (0/1), `error_msg`
 
 ## Adding a new crawler
 
 1. Create `crawlers/<source>.py` with `async def fetch_new() -> list[dict]`; optionally `async def backfill() -> list[dict]`
 2. Each dict must have: `source`, `url`, `title`, `description`, `published_at` (ISO8601 naive UTC), `content_hash`
-3. Wire into `run_crawl()` and `run_backfill()` in `pipeline.py`
-4. Add source button + CSS color vars to `static/index.html`
+3. Wire into `run_crawl()` and (if backfill supported) `run_backfill()` in `pipeline.py`
+4. Add source button + CSS color var to `static/index.html`
 
 ## gstack
 
