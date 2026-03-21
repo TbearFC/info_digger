@@ -443,7 +443,7 @@
       const data = await res.json();
 
       if (data.length < 2) {
-        container.innerHTML = '<div class="chart-empty">数据积累中，暂无趋势图</div>';
+        container.innerHTML = '<div class="chart-empty">Not enough data for a chart yet.</div>';
         return;
       }
 
@@ -454,7 +454,7 @@
   }
 
   function renderChart(data) {
-    const W = 800, H = 120, PAD = { top: 10, right: 10, bottom: 24, left: 30 };
+    const W = 800, H = 120, PAD = { top: 10, right: 10, bottom: 24, left: 36 };
     const innerW = W - PAD.left - PAD.right;
     const innerH = H - PAD.top - PAD.bottom;
 
@@ -463,14 +463,25 @@
       data.some(d => d[src] > 0)
     );
     if (activeSources.length === 0) {
-      return '<div class="chart-empty">数据积累中，暂无趋势图</div>';
+      return '<div class="chart-empty">Not enough data for a chart yet.</div>';
     }
 
     const months = data.map(d => d.month);
     const maxVal = Math.max(1, ...data.flatMap(d => activeSources.map(s => d[s] || 0)));
 
-    const xScale = i => PAD.left + (i / (months.length - 1)) * innerW;
+    const xScale = i => PAD.left + (months.length > 1 ? (i / (months.length - 1)) * innerW : innerW / 2);
     const yScale = v => PAD.top + innerH - (v / maxVal) * innerH;
+
+    // Y-axis ticks: 0, mid, max (deduplicated)
+    const rawTicks = [0, Math.round(maxVal / 2), maxVal];
+    const ticks = [...new Set(rawTicks)];
+
+    let gridlines = '', ylabels = '';
+    ticks.forEach(tick => {
+      const y = yScale(tick);
+      gridlines += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#2a2d3e" stroke-width="1" stroke-dasharray="3,3"/>`;
+      ylabels += `<text x="${PAD.left - 4}" y="${y + 3}" fill="#64748b" font-size="9" text-anchor="end">${tick}</text>`;
+    });
 
     let paths = '';
     activeSources.forEach(src => {
@@ -494,10 +505,7 @@
       }
     });
 
-    // Y-axis label
-    const ylabel = `<text x="${PAD.left - 4}" y="${PAD.top + innerH / 2}" fill="#64748b" font-size="9" text-anchor="middle" transform="rotate(-90,${PAD.left - 14},${PAD.top + innerH / 2})">${maxVal}</text>`;
-
-    return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${ylabel}${paths}${xlabels}</svg>`;
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${gridlines}${ylabels}${paths}${xlabels}</svg>`;
   }
 
   // ── Research assistant ───────────────────────────────────────────────────
