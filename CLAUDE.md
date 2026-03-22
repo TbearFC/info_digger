@@ -7,8 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 pip install -r requirements.txt
 cp .env.example .env   # fill in ANTHROPIC_API_KEY
-uvicorn main:app --reload
+python3 -m uvicorn main:app --reload
 ```
+
+> **Note:** The codebase requires **Python 3.10+** due to `X | Y` union type annotations. On macOS the system Python is 3.9 — use a venv with Python 3.10+ or `pip3` from a Homebrew Python. The `summarizer.py` fix already uses `Optional[...]` for 3.9 compat but the rest of the codebase may not be tested on 3.9.
 
 Or with Docker:
 ```bash
@@ -80,6 +82,13 @@ Both tables created in `db.init()` via `CREATE TABLE IF NOT EXISTS` — safe for
 
 - **`entries`** — `source`, `url`, `title`, `summary`, `topic_tags` (JSON array), `published_at` (ISO8601 naive UTC), `content_hash` (UNIQUE), `fetched_at`
 - **`api_calls`** — `called_at`, `caller` (`"summarizer"` | `"ask"`), `success` (0/1), `error_msg`
+
+## Known gotchas
+
+- **`.env` inline comments break token values** — `python-dotenv` parses everything after `=` as the value, including inline `# comments`. If `GITHUB_TOKEN` has a comment with em dashes (`—`), the em dash ends up in the HTTP `Authorization` header and causes an `ascii` codec error. Always put comments on their own line in `.env`.
+- **GitHub query 422** — `_all_keywords()` in `github.py` truncates to 50 keywords, but the combined query can still exceed GitHub's limit. If `fetch_new()` returns empty with a 422, reduce the keyword set or split into multiple requests.
+- **arXiv backfill is slow** — the 3-month arXiv backfill respects a 3-second delay between pages (ToS). Expect 30–90 minutes. Set `DB_BACKFILLED=1` after the first run to skip it on restart.
+- **Activity chart requires ≥ 2 months of data** — with less data it shows "Not enough data for a chart yet." This is by design.
 
 ## Adding a new crawler
 

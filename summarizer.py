@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Optional
 
 import anthropic
 
@@ -7,7 +8,7 @@ import db
 
 logger = logging.getLogger(__name__)
 
-_client: anthropic.AsyncAnthropic | None = None
+_client: Optional[anthropic.AsyncAnthropic] = None
 
 
 def _get_client() -> anthropic.AsyncAnthropic:
