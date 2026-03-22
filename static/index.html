@@ -3,146 +3,214 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>info_digger — AI Intelligence Timeline</title>
+  <title>info_digger — AI Intelligence</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --border: #2a2d3e;
-      --text: #e2e8f0;
-      --muted: #64748b;
-      --github: #3b82f6;
-      --arxiv: #f97316;
-      --huggingface: #22c55e;
-      --twitter: #a855f7;
-      --accent: #6366f1;
+      /* Apple dark mode system colors */
+      --bg:          #000000;
+      --surface-1:   #1c1c1e;
+      --surface-2:   #2c2c2e;
+      --surface-3:   #3a3a3c;
+      --separator:   rgba(84,84,88,0.65);
+      --separator-opaque: #38383a;
+
+      --label:       #ffffff;
+      --label-2:     rgba(235,235,245,0.6);
+      --label-3:     rgba(235,235,245,0.3);
+      --label-4:     rgba(235,235,245,0.18);
+
+      --accent:      #0a84ff;
+      --accent-dim:  rgba(10,132,255,0.15);
+
+      /* Source colors */
+      --github:      #0a84ff;
+      --arxiv:       #ff9f0a;
+      --huggingface: #30d158;
+      --twitter:     #bf5af2;
+
+      --radius-sm:   6px;
+      --radius-md:   10px;
+      --radius-lg:   14px;
     }
 
     body {
       background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 14px;
-      line-height: 1.6;
+      color: var(--label);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      font-size: 15px;
+      line-height: 1.47;
+      -webkit-font-smoothing: antialiased;
       min-height: 100vh;
     }
 
+    /* ── Header ──────────────────────────────────────────────────────────── */
     header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 100;
+      background: rgba(28,28,30,0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid var(--separator);
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .logo {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: -0.5px;
-      white-space: nowrap;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      color: var(--label);
     }
 
-    .logo span { color: var(--muted); font-weight: 400; }
+    .logo-sub {
+      font-size: 13px;
+      color: var(--label-3);
+      font-weight: 400;
+      letter-spacing: 0;
+    }
 
-    .controls {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
+    /* ── Toolbar ─────────────────────────────────────────────────────────── */
+    .toolbar {
+      background: var(--surface-1);
+      border-bottom: 0.5px solid var(--separator);
+      padding: 10px 24px;
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
     }
 
-    .controls label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+    .toolbar-label {
+      font-size: 12px;
+      color: var(--label-3);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
 
+    /* Topic select */
     select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 10px;
-      color: var(--text);
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--surface-2);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 5px 28px 5px 10px;
+      color: var(--label);
       font-size: 13px;
+      font-family: inherit;
       cursor: pointer;
       outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(235,235,245,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
     }
 
-    .source-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    /* Source filter pills */
+    .source-filters { display: flex; gap: 6px; flex-wrap: wrap; }
 
     .source-btn {
-      padding: 5px 12px;
+      padding: 4px 12px;
       border-radius: 20px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
+      border: none;
+      background: var(--surface-2);
+      color: var(--label-2);
       font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
       cursor: pointer;
-      transition: all .15s;
+      transition: background 0.15s, color 0.15s;
     }
 
-    .source-btn.active-github     { border-color: var(--github);     color: var(--github);     background: rgba(59,130,246,.1); }
-    .source-btn.active-arxiv      { border-color: var(--arxiv);      color: var(--arxiv);      background: rgba(249,115,22,.1); }
-    .source-btn.active-huggingface{ border-color: var(--huggingface);color: var(--huggingface);background: rgba(34,197,94,.1); }
-    .source-btn.active-twitter    { border-color: var(--twitter);    color: var(--twitter);    background: rgba(168,85,247,.1); }
-    .source-btn.active-all        { border-color: var(--accent);     color: var(--accent);     background: rgba(99,102,241,.1); }
+    .source-btn:hover { background: var(--surface-3); }
+    .source-btn.active-all        { background: var(--accent); color: #fff; }
+    .source-btn.active-github     { background: var(--github); color: #fff; }
+    .source-btn.active-arxiv      { background: var(--arxiv);  color: #000; }
+    .source-btn.active-huggingface{ background: var(--huggingface); color: #000; }
+    .source-btn.active-twitter    { background: var(--twitter); color: #fff; }
 
-    /* Research assistant panel */
-    .ask-panel {
-      max-width: 800px;
+    /* ── Content wrapper ─────────────────────────────────────────────────── */
+    .content {
+      max-width: 720px;
       margin: 0 auto;
-      padding: 20px 24px 0;
+      padding: 0 20px;
     }
 
-    .ask-row {
+    /* ── Research bar (Spotlight-style) ──────────────────────────────────── */
+    .ask-section {
+      padding: 20px 0 0;
+    }
+
+    .ask-bar {
       display: flex;
-      gap: 8px;
+      align-items: center;
+      gap: 0;
+      background: var(--surface-1);
+      border-radius: var(--radius-lg);
+      border: 0.5px solid var(--separator);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .ask-bar:focus-within {
+      border-color: var(--accent);
+    }
+
+    .ask-icon {
+      padding: 0 12px 0 16px;
+      color: var(--label-3);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
     }
 
     .ask-input {
       flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 9px 14px;
-      color: var(--text);
-      font-size: 13px;
+      background: transparent;
+      border: none;
+      padding: 13px 0;
+      color: var(--label);
+      font-size: 15px;
+      font-family: inherit;
       outline: none;
-      transition: border-color .15s;
+      min-width: 0;
     }
 
-    .ask-input:focus { border-color: var(--accent); }
-    .ask-input::placeholder { color: var(--muted); }
+    .ask-input::placeholder { color: var(--label-3); }
 
     .ask-btn {
-      padding: 9px 18px;
+      padding: 8px 16px;
+      margin: 6px;
       background: var(--accent);
       border: none;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       color: #fff;
       font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
       cursor: pointer;
-      transition: opacity .15s;
+      transition: opacity 0.15s;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .ask-btn:hover { opacity: .85; }
-    .ask-btn:disabled { opacity: .4; cursor: default; }
+    .ask-btn:hover { opacity: 0.85; }
+    .ask-btn:disabled { opacity: 0.35; cursor: default; }
 
     .ask-answer {
       margin-top: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 14px;
-      font-size: 13px;
-      line-height: 1.7;
+      background: var(--surface-1);
+      border: 0.5px solid var(--separator);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      font-size: 15px;
+      line-height: 1.6;
       display: none;
     }
 
@@ -150,84 +218,127 @@
 
     .ask-answer-label {
       font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .08em;
+      letter-spacing: 0.08em;
       color: var(--accent);
-      margin-bottom: 6px;
-    }
-
-    .ask-sources {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .ask-sources a {
-      color: var(--muted);
-      text-decoration: none;
-    }
-
-    .ask-sources a:hover { color: var(--accent); }
-
-    /* Activity chart */
-    .chart-wrap {
-      max-width: 800px;
-      margin: 16px auto 0;
-      padding: 0 24px;
-    }
-
-    .chart-label {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
       margin-bottom: 8px;
     }
 
-    .chart-empty {
+    .ask-sources {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 0.5px solid var(--separator);
       font-size: 12px;
-      color: var(--muted);
+      color: var(--label-3);
+    }
+
+    .ask-sources a { color: var(--label-3); text-decoration: none; }
+    .ask-sources a:hover { color: var(--accent); }
+
+    /* ── Activity chart ───────────────────────────────────────────────────── */
+    .chart-section {
+      padding: 24px 0 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--label-2);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .chart-box {
+      background: var(--surface-1);
+      border-radius: var(--radius-lg);
+      border: 0.5px solid var(--separator);
+      padding: 16px 20px 12px;
+    }
+
+    .chart-empty {
+      font-size: 13px;
+      color: var(--label-3);
       text-align: center;
-      padding: 16px 0;
+      padding: 20px 0;
     }
 
-    svg.chart { width: 100%; height: 120px; display: block; }
+    svg.chart { width: 100%; height: 110px; display: block; }
 
+    /* Chart legend */
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 0.5px solid var(--separator);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--label-3);
+    }
+
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Timeline ─────────────────────────────────────────────────────────── */
     main {
-      max-width: 800px;
+      padding: 32px 20px 100px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: 24px 24px 80px;
     }
 
-    .month-group { margin-bottom: 32px; }
+    .month-group { margin-bottom: 40px; }
 
     .month-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      color: var(--muted);
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--label);
       margin-bottom: 16px;
+    }
+
+    /* Entry list — card style */
+    .entry-list {
+      background: var(--surface-1);
+      border-radius: var(--radius-lg);
+      border: 0.5px solid var(--separator);
+      overflow: hidden;
     }
 
     .entry {
       display: flex;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 0.5px solid var(--separator);
+      transition: background 0.12s;
     }
 
     .entry:last-child { border-bottom: none; }
+    .entry:hover { background: var(--surface-2); }
 
     .dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      margin-top: 6px;
+      margin-top: 5px;
       flex-shrink: 0;
     }
 
@@ -238,108 +349,111 @@
 
     .entry-body { flex: 1; min-width: 0; }
 
-    .entry-title {
+    .entry-meta {
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--label-3);
     }
 
     .entry-title a {
-      color: var(--text);
-      text-decoration: none;
+      font-size: 14px;
       font-weight: 500;
+      color: var(--label);
+      text-decoration: none;
       word-break: break-word;
+      line-height: 1.4;
     }
 
     .entry-title a:hover { color: var(--accent); }
 
-    .badge {
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: 3px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .badge-github      { background: rgba(59,130,246,.15);  color: var(--github); }
-    .badge-arxiv       { background: rgba(249,115,22,.15);  color: var(--arxiv); }
-    .badge-huggingface { background: rgba(34,197,94,.15);   color: var(--huggingface); }
-    .badge-twitter     { background: rgba(168,85,247,.15);  color: var(--twitter); }
-
     .entry-summary {
-      color: var(--muted);
       font-size: 13px;
+      color: var(--label-2);
       margin-top: 4px;
+      line-height: 1.5;
     }
 
     .tags {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap;
-      margin-top: 6px;
+      margin-top: 7px;
     }
 
     .tag {
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 3px;
-      background: rgba(99,102,241,.1);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--accent-dim);
       color: var(--accent);
-      border: 1px solid rgba(99,102,241,.2);
     }
 
-    .load-more-wrap { text-align: center; margin-top: 32px; }
+    /* ── Load more ────────────────────────────────────────────────────────── */
+    .load-more-wrap { text-align: center; margin-top: 28px; }
 
     .load-more {
-      padding: 10px 28px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
+      padding: 10px 32px;
+      background: var(--surface-1);
+      border: 0.5px solid var(--separator);
+      border-radius: 20px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
-      font-size: 13px;
-      transition: border-color .15s;
+      transition: background 0.15s;
     }
 
-    .load-more:hover { border-color: var(--accent); color: var(--accent); }
-    .load-more:disabled { opacity: .4; cursor: default; }
+    .load-more:hover { background: var(--surface-2); }
+    .load-more:disabled { opacity: 0.35; cursor: default; }
 
+    /* ── States ───────────────────────────────────────────────────────────── */
     .empty {
       text-align: center;
-      color: var(--muted);
-      padding: 60px 0;
+      color: var(--label-3);
+      padding: 80px 0;
       font-size: 15px;
     }
 
     .loading {
       text-align: center;
-      color: var(--muted);
-      padding: 40px 0;
-      animation: pulse 1.5s ease-in-out infinite;
+      color: var(--label-3);
+      padding: 60px 0;
+      font-size: 14px;
+      animation: pulse 1.6s ease-in-out infinite;
     }
 
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">info_digger <span>/ AI timeline</span></div>
+  <div>
+    <span class="logo">info_digger</span>
+    <span class="logo-sub">  AI Intelligence</span>
+  </div>
 </header>
 
-<div class="controls">
+<div class="toolbar">
   <div style="display:flex;align-items:center;gap:8px">
-    <label>Topic</label>
+    <span class="toolbar-label">Topic</span>
     <select id="topic-select">
-      <option value="">All topics</option>
+      <option value="">All</option>
     </select>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <label>Source</label>
+    <span class="toolbar-label">Source</span>
     <div class="source-filters">
       <button class="source-btn active-all" data-source="" id="btn-all">All</button>
       <button class="source-btn" data-source="github" id="btn-github">GitHub</button>
@@ -350,32 +464,47 @@
   </div>
 </div>
 
-<!-- Research assistant -->
-<div class="ask-panel">
-  <div class="ask-row">
-    <input
-      type="text"
-      class="ask-input"
-      id="ask-input"
-      placeholder="Ask anything: e.g. What happened with RAG this month?"
-    >
-    <button class="ask-btn" id="ask-btn">Ask</button>
+<div class="content">
+
+  <!-- Research bar -->
+  <div class="ask-section">
+    <div class="ask-bar">
+      <div class="ask-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <input
+        type="text"
+        class="ask-input"
+        id="ask-input"
+        placeholder="Ask anything about AI — e.g. What happened with RAG this month?"
+      >
+      <button class="ask-btn" id="ask-btn">Ask</button>
+    </div>
+    <div class="ask-answer" id="ask-answer">
+      <div class="ask-answer-label">Answer</div>
+      <div id="ask-answer-text"></div>
+      <div class="ask-sources" id="ask-sources"></div>
+    </div>
   </div>
-  <div class="ask-answer" id="ask-answer">
-    <div class="ask-answer-label">Answer</div>
-    <div id="ask-answer-text"></div>
-    <div class="ask-sources" id="ask-sources"></div>
+
+  <!-- Activity chart -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-title">Activity</span>
+    </div>
+    <div class="chart-box">
+      <div id="chart-container"><div class="chart-empty">Loading…</div></div>
+    </div>
   </div>
+
 </div>
 
-<!-- Activity chart -->
-<div class="chart-wrap">
-  <div class="chart-label">Topic activity over time</div>
-  <div id="chart-container"><div class="chart-empty">Loading chart...</div></div>
-</div>
-
+<!-- Timeline -->
 <main id="main">
-  <div class="loading">Loading timeline...</div>
+  <div class="loading">Loading…</div>
 </main>
 
 <script>
@@ -387,10 +516,10 @@
   const LIMIT = 50;
 
   const SOURCE_COLORS = {
-    github: '#3b82f6',
-    arxiv: '#f97316',
-    huggingface: '#22c55e',
-    twitter: '#a855f7',
+    github:      '#0a84ff',
+    arxiv:       '#ff9f0a',
+    huggingface: '#30d158',
+    twitter:     '#bf5af2',
   };
 
   // Source filter buttons
@@ -411,12 +540,12 @@
 
   function reset() {
     offset = 0;
-    document.getElementById('main').innerHTML = '<div class="loading">Loading...</div>';
+    document.getElementById('main').innerHTML = '<div class="loading">Loading…</div>';
     loadEntries(true);
     loadChart();
   }
 
-  // ── Load topics ──────────────────────────────────────────────────────────
+  // ── Topics ───────────────────────────────────────────────────────────────
   async function loadTopics() {
     try {
       const res = await fetch(API + '/api/topics');
@@ -424,16 +553,13 @@
       const sel = document.getElementById('topic-select');
       topics.forEach(t => {
         const opt = document.createElement('option');
-        opt.value = t;
-        opt.textContent = t;
+        opt.value = t; opt.textContent = t;
         sel.appendChild(opt);
       });
-    } catch (e) {
-      console.error('Failed to load topics', e);
-    }
+    } catch (e) { console.error('Failed to load topics', e); }
   }
 
-  // ── Activity chart ───────────────────────────────────────────────────────
+  // ── Chart ────────────────────────────────────────────────────────────────
   async function loadChart() {
     const container = document.getElementById('chart-container');
     try {
@@ -446,7 +572,6 @@
         container.innerHTML = '<div class="chart-empty">Not enough data for a chart yet.</div>';
         return;
       }
-
       container.innerHTML = renderChart(data);
     } catch (e) {
       container.innerHTML = '';
@@ -454,14 +579,11 @@
   }
 
   function renderChart(data) {
-    const W = 800, H = 120, PAD = { top: 10, right: 10, bottom: 24, left: 36 };
+    const W = 680, H = 110, PAD = { top: 8, right: 8, bottom: 22, left: 32 };
     const innerW = W - PAD.left - PAD.right;
     const innerH = H - PAD.top - PAD.bottom;
 
-    // Detect which sources have data
-    const activeSources = Object.keys(SOURCE_COLORS).filter(src =>
-      data.some(d => d[src] > 0)
-    );
+    const activeSources = Object.keys(SOURCE_COLORS).filter(src => data.some(d => d[src] > 0));
     if (activeSources.length === 0) {
       return '<div class="chart-empty">Not enough data for a chart yet.</div>';
     }
@@ -472,55 +594,56 @@
     const xScale = i => PAD.left + (months.length > 1 ? (i / (months.length - 1)) * innerW : innerW / 2);
     const yScale = v => PAD.top + innerH - (v / maxVal) * innerH;
 
-    // Y-axis ticks: 0, mid, max (deduplicated)
     const rawTicks = [0, Math.round(maxVal / 2), maxVal];
     const ticks = [...new Set(rawTicks)];
 
     let gridlines = '', ylabels = '';
     ticks.forEach(tick => {
       const y = yScale(tick);
-      gridlines += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#2a2d3e" stroke-width="1" stroke-dasharray="3,3"/>`;
-      ylabels += `<text x="${PAD.left - 4}" y="${y + 3}" fill="#64748b" font-size="9" text-anchor="end">${tick}</text>`;
+      gridlines += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="rgba(84,84,88,0.4)" stroke-width="0.5"/>`;
+      ylabels += `<text x="${PAD.left - 5}" y="${y + 3.5}" fill="rgba(235,235,245,0.3)" font-size="9" text-anchor="end" font-family="-apple-system,sans-serif">${tick}</text>`;
     });
 
     let paths = '';
     activeSources.forEach(src => {
       const points = data.map((d, i) => `${xScale(i)},${yScale(d[src] || 0)}`).join(' ');
-      paths += `<polyline points="${points}" fill="none" stroke="${SOURCE_COLORS[src]}" stroke-width="1.5" opacity="0.85">`;
-      // Hover tooltips on each data point
+      paths += `<polyline points="${points}" fill="none" stroke="${SOURCE_COLORS[src]}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`;
       data.forEach((d, i) => {
         if (d[src]) {
           paths += `<circle cx="${xScale(i)}" cy="${yScale(d[src])}" r="3" fill="${SOURCE_COLORS[src]}"><title>${d.month} · ${src}: ${d[src]}</title></circle>`;
         }
       });
-      paths += `</polyline>`;
     });
 
-    // X-axis labels (show every Nth month to avoid overlap)
     const step = Math.max(1, Math.floor(months.length / 6));
     let xlabels = '';
     months.forEach((m, i) => {
       if (i % step === 0 || i === months.length - 1) {
-        xlabels += `<text x="${xScale(i)}" y="${H - 4}" fill="#64748b" font-size="9" text-anchor="middle">${m}</text>`;
+        xlabels += `<text x="${xScale(i)}" y="${H - 4}" fill="rgba(235,235,245,0.3)" font-size="9" text-anchor="middle" font-family="-apple-system,sans-serif">${m}</text>`;
       }
     });
 
-    return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${gridlines}${ylabels}${paths}${xlabels}</svg>`;
+    const legendItems = activeSources.map(src =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${SOURCE_COLORS[src]}"></div>${sourceBadgeLabel(src)}</div>`
+    ).join('');
+
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${gridlines}${ylabels}${paths}${xlabels}</svg>
+            <div class="chart-legend">${legendItems}</div>`;
   }
 
-  // ── Research assistant ───────────────────────────────────────────────────
-  const askInput = document.getElementById('ask-input');
-  const askBtn = document.getElementById('ask-btn');
+  // ── Research assistant ────────────────────────────────────────────────────
+  const askInput  = document.getElementById('ask-input');
+  const askBtn    = document.getElementById('ask-btn');
   const askAnswer = document.getElementById('ask-answer');
-  const askAnswerText = document.getElementById('ask-answer-text');
-  const askSources = document.getElementById('ask-sources');
+  const askText   = document.getElementById('ask-answer-text');
+  const askSrc    = document.getElementById('ask-sources');
 
   async function doAsk() {
     const question = askInput.value.trim();
     if (!question) return;
 
     askBtn.disabled = true;
-    askBtn.textContent = '...';
+    askBtn.textContent = '…';
     askAnswer.classList.remove('visible');
 
     try {
@@ -532,22 +655,21 @@
       const data = await res.json();
 
       if (!res.ok) {
-        askAnswerText.textContent = data.detail?.message || 'Error: service unavailable';
-        askSources.innerHTML = '';
+        askText.textContent = data.detail?.message || 'Service unavailable.';
+        askSrc.innerHTML = '';
       } else {
-        askAnswerText.textContent = data.answer;
+        askText.textContent = data.answer;
         if (data.sources && data.sources.length) {
-          const top5 = data.sources.slice(0, 5);
-          askSources.innerHTML = 'Sources: ' + top5.map(s =>
+          askSrc.innerHTML = 'Sources: ' + data.sources.slice(0, 5).map(s =>
             `<a href="${escHtml(s.url)}" target="_blank" rel="noopener">${escHtml(s.title)}</a>`
           ).join(' · ');
         } else {
-          askSources.innerHTML = '';
+          askSrc.innerHTML = '';
         }
       }
       askAnswer.classList.add('visible');
     } catch (e) {
-      askAnswerText.textContent = 'Failed to reach server.';
+      askText.textContent = 'Failed to reach server.';
       askAnswer.classList.add('visible');
     } finally {
       askBtn.disabled = false;
@@ -558,7 +680,7 @@
   askBtn.addEventListener('click', doAsk);
   askInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAsk(); });
 
-  // ── Timeline ─────────────────────────────────────────────────────────────
+  // ── Timeline ──────────────────────────────────────────────────────────────
   function monthKey(iso) { return iso ? iso.slice(0, 7) : 'unknown'; }
 
   function monthLabel(key) {
@@ -568,8 +690,7 @@
   }
 
   function sourceBadgeLabel(source) {
-    const labels = { github: 'GitHub', arxiv: 'arXiv', huggingface: 'HuggingFace', twitter: 'Twitter' };
-    return labels[source] || source;
+    return { github: 'GitHub', arxiv: 'arXiv', huggingface: 'HuggingFace', twitter: 'Twitter' }[source] || source;
   }
 
   function renderEntries(entries, append) {
@@ -578,7 +699,7 @@
     if (!append) {
       main.innerHTML = '';
       if (entries.length === 0) {
-        main.innerHTML = '<div class="empty">No entries found. The crawler may still be running — check back in a few minutes.</div>';
+        main.innerHTML = '<div class="empty">No entries found.<br>The crawler may still be running — check back shortly.</div>';
         return;
       }
     }
@@ -599,10 +720,11 @@
         group = document.createElement('div');
         group.className = 'month-group';
         group.dataset.month = key;
-        group.innerHTML = `<div class="month-label">${monthLabel(key)}</div>`;
+        group.innerHTML = `<div class="month-label">${monthLabel(key)}</div><div class="entry-list"></div>`;
         main.appendChild(group);
       }
 
+      const list = group.querySelector('.entry-list');
       items.forEach(entry => {
         const div = document.createElement('div');
         div.className = 'entry';
@@ -610,14 +732,16 @@
         div.innerHTML = `
           <div class="dot dot-${entry.source}"></div>
           <div class="entry-body">
+            <div class="entry-meta">
+              <span class="badge">${sourceBadgeLabel(entry.source)}</span>
+            </div>
             <div class="entry-title">
               <a href="${escHtml(entry.url)}" target="_blank" rel="noopener">${escHtml(entry.title)}</a>
-              <span class="badge badge-${entry.source}">${sourceBadgeLabel(entry.source)}</span>
             </div>
             ${entry.summary ? `<div class="entry-summary">${escHtml(entry.summary)}</div>` : ''}
             ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
           </div>`;
-        group.appendChild(div);
+        list.appendChild(div);
       });
     });
 
@@ -642,7 +766,7 @@
     loading = true;
 
     const btn = document.getElementById('load-more-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
 
     const params = new URLSearchParams({ limit: LIMIT, offset });
     if (currentTopic) params.set('topic', currentTopic);
@@ -653,16 +777,12 @@
       const entries = await res.json();
       renderEntries(entries, append);
     } catch (e) {
-      console.error('Failed to load entries', e);
-      if (!append) {
-        document.getElementById('main').innerHTML = '<div class="empty">Failed to load entries. Is the server running?</div>';
-      }
+      if (!append) document.getElementById('main').innerHTML = '<div class="empty">Failed to load. Is the server running?</div>';
     } finally {
       loading = false;
     }
   }
 
-  // Init
   loadTopics();
   loadEntries(false);
   loadChart();
