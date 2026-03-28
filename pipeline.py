@@ -3,7 +3,7 @@ import logging
 import os
 
 import db
-from crawlers import arxiv, github, huggingface
+from crawlers import arxiv, github, huggingface, news
 from summarizer import summarize
 from topics import tag_entry
 
@@ -49,6 +49,7 @@ async def run_crawl() -> None:
         github.fetch_new(),
         arxiv.fetch_rss(),
         huggingface.fetch_new(),
+        news.fetch_new(),
     ]
 
     if _twitter_enabled():

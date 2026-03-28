@@ -177,6 +177,28 @@ def get_stats(topic: Optional[str] = None) -> list[dict]:
     return list(months.values())
 
 
+def _now_iso() -> str:
+    return datetime.utcnow().isoformat()
+
+
+def get_digest_entries(hours: int = 24) -> list[dict]:
+    """Return entries published within the last `hours` hours, newest first."""
+    from datetime import timedelta
+    since = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
+    conn = _connect()
+    rows = conn.execute(
+        "SELECT * FROM entries WHERE published_at >= ? ORDER BY published_at DESC LIMIT 200",
+        (since,),
+    ).fetchall()
+    conn.close()
+    result = []
+    for row in rows:
+        d = dict(row)
+        d["topic_tags"] = json.loads(d["topic_tags"])
+        result.append(d)
+    return result
+
+
 def log_api_call(caller: str, success: bool, error_msg: Optional[str] = None) -> None:
     """Record a Claude API call for health monitoring."""
     conn = _connect()

@@ -29,6 +29,7 @@
       --arxiv:       #ff9f0a;
       --huggingface: #30d158;
       --twitter:     #bf5af2;
+      --news:        #ff375f;
 
       --radius-sm:   6px;
       --radius-md:   10px;
@@ -134,6 +135,7 @@
     .source-btn.active-arxiv      { background: var(--arxiv);  color: #000; }
     .source-btn.active-huggingface{ background: var(--huggingface); color: #000; }
     .source-btn.active-twitter    { background: var(--twitter); color: #fff; }
+    .source-btn.active-news       { background: var(--news);    color: #fff; }
 
     /* ── Content wrapper ─────────────────────────────────────────────────── */
     .content {
@@ -346,6 +348,7 @@
     .dot-arxiv       { background: var(--arxiv); }
     .dot-huggingface { background: var(--huggingface); }
     .dot-twitter     { background: var(--twitter); }
+    .dot-news        { background: var(--news); }
 
     .entry-body { flex: 1; min-width: 0; }
 
@@ -417,6 +420,132 @@
     .load-more:hover { background: var(--surface-2); }
     .load-more:disabled { opacity: 0.35; cursor: default; }
 
+    /* ── Digest section ──────────────────────────────────────────────────── */
+    .digest-section { padding: 20px 0 0; }
+
+    .digest-card {
+      background: var(--surface-1);
+      border: 0.5px solid var(--separator);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .digest-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 0.5px solid var(--separator);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .digest-header:hover { background: var(--surface-2); }
+
+    .digest-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .digest-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--label);
+    }
+
+    .digest-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .source-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.03em;
+    }
+
+    .pill-github      { background: rgba(10,132,255,0.15);  color: var(--github); }
+    .pill-arxiv       { background: rgba(255,159,10,0.15);  color: var(--arxiv); }
+    .pill-huggingface { background: rgba(48,209,88,0.15);   color: var(--huggingface); }
+    .pill-twitter     { background: rgba(191,90,242,0.15);  color: var(--twitter); }
+    .pill-news        { background: rgba(255,55,95,0.15);   color: var(--news); }
+
+    .digest-chevron {
+      color: var(--label-3);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .digest-chevron.open { transform: rotate(180deg); }
+
+    .digest-body { padding: 14px 16px; }
+
+    .digest-summary {
+      font-size: 14px;
+      color: var(--label-2);
+      line-height: 1.6;
+    }
+
+    .digest-ts {
+      font-size: 11px;
+      color: var(--label-3);
+      margin-top: 8px;
+    }
+
+    .digest-entries {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 0.5px solid var(--separator);
+      display: none;
+    }
+
+    .digest-entries.visible { display: block; }
+
+    .digest-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    .digest-entry:last-child { border-bottom: none; }
+
+    .digest-entry-body { flex: 1; min-width: 0; }
+
+    .digest-entry-title a {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--label);
+      text-decoration: none;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .digest-entry-title a:hover { color: var(--accent); }
+
+    .digest-entry-summary {
+      font-size: 12px;
+      color: var(--label-2);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .digest-show-more {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 8px 0 0;
+    }
+
     /* ── States ───────────────────────────────────────────────────────────── */
     .empty {
       text-align: center;
@@ -460,6 +589,7 @@
       <button class="source-btn" data-source="arxiv" id="btn-arxiv">arXiv</button>
       <button class="source-btn" data-source="huggingface" id="btn-huggingface">HuggingFace</button>
       <button class="source-btn" data-source="twitter" id="btn-twitter">Twitter</button>
+      <button class="source-btn" data-source="news" id="btn-news">News</button>
     </div>
   </div>
 </div>
@@ -487,6 +617,16 @@
       <div class="ask-answer-label">Answer</div>
       <div id="ask-answer-text"></div>
       <div class="ask-sources" id="ask-sources"></div>
+    </div>
+  </div>
+
+  <!-- Daily digest -->
+  <div class="digest-section">
+    <div class="section-header">
+      <span class="section-title">Today in AI</span>
+    </div>
+    <div class="digest-card" id="digest-card">
+      <div class="digest-body"><div class="loading" style="padding:20px 0">Loading digest…</div></div>
     </div>
   </div>
 
@@ -520,6 +660,7 @@
     arxiv:       '#ff9f0a',
     huggingface: '#30d158',
     twitter:     '#bf5af2',
+    news:        '#ff375f',
   };
 
   // Source filter buttons
@@ -690,7 +831,7 @@
   }
 
   function sourceBadgeLabel(source) {
-    return { github: 'GitHub', arxiv: 'arXiv', huggingface: 'HuggingFace', twitter: 'Twitter' }[source] || source;
+    return { github: 'GitHub', arxiv: 'arXiv', huggingface: 'HuggingFace', twitter: 'Twitter', news: 'News' }[source] || source;
   }
 
   function renderEntries(entries, append) {
@@ -783,7 +924,87 @@
     }
   }
 
+  // ── Daily digest ──────────────────────────────────────────────────────────
+  let digestEntriesExpanded = false;
+  let digestEntriesShowAll  = false;
+  const DIGEST_PREVIEW = 5;
+
+  async function loadDigest() {
+    const card = document.getElementById('digest-card');
+    try {
+      const res = await fetch(API + '/api/digest');
+      const data = await res.json();
+      renderDigest(card, data);
+    } catch (e) {
+      card.innerHTML = '<div class="digest-body"><span style="font-size:13px;color:var(--label-3)">Digest unavailable.</span></div>';
+    }
+  }
+
+  function renderDigest(card, data) {
+    const { count, by_source, summary, entries, generated_at } = data;
+
+    const pillsHtml = Object.entries(by_source)
+      .sort((a, b) => b[1] - a[1])
+      .map(([src, n]) => `<span class="source-pill pill-${src}">${sourceBadgeLabel(src)} ${n}</span>`)
+      .join('');
+
+    const tsStr = generated_at ? new Date(generated_at + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+    let entriesHtml = '';
+    if (entries && entries.length) {
+      const visible = digestEntriesShowAll ? entries : entries.slice(0, DIGEST_PREVIEW);
+      entriesHtml = visible.map(e => `
+        <div class="digest-entry">
+          <div class="dot dot-${e.source}" style="margin-top:4px;flex-shrink:0"></div>
+          <div class="digest-entry-body">
+            <div class="digest-entry-title">
+              <a href="${escHtml(e.url)}" target="_blank" rel="noopener">${escHtml(e.title)}</a>
+            </div>
+            ${e.summary ? `<div class="digest-entry-summary">${escHtml(e.summary)}</div>` : ''}
+          </div>
+        </div>`).join('');
+      if (!digestEntriesShowAll && entries.length > DIGEST_PREVIEW) {
+        entriesHtml += `<button class="digest-show-more" id="digest-show-more">Show all ${entries.length} items</button>`;
+      }
+    }
+
+    card.innerHTML = `
+      <div class="digest-header" id="digest-toggle">
+        <div class="digest-header-left">
+          <span class="digest-title">过去24小时 · ${count} 条</span>
+          <div class="digest-meta">${pillsHtml}</div>
+        </div>
+        <svg class="digest-chevron ${digestEntriesExpanded ? 'open' : ''}" width="12" height="8" viewBox="0 0 12 8" fill="none">
+          <path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="digest-body" id="digest-body" style="${digestEntriesExpanded ? '' : 'display:none'}">
+        ${summary ? `<div class="digest-summary">${escHtml(summary)}</div>` : '<div class="digest-summary" style="color:var(--label-3)">摘要生成中…</div>'}
+        ${tsStr ? `<div class="digest-ts">更新于 ${tsStr}</div>` : ''}
+        <div class="digest-entries visible" id="digest-entries">${entriesHtml}</div>
+      </div>`;
+
+    document.getElementById('digest-toggle').addEventListener('click', () => {
+      digestEntriesExpanded = !digestEntriesExpanded;
+      document.getElementById('digest-body').style.display = digestEntriesExpanded ? '' : 'none';
+      document.querySelector('.digest-chevron').classList.toggle('open', digestEntriesExpanded);
+    });
+
+    const showMoreBtn = document.getElementById('digest-show-more');
+    if (showMoreBtn) {
+      showMoreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        digestEntriesShowAll = true;
+        renderDigest(card, data);
+        // Re-open since re-render resets
+        digestEntriesExpanded = true;
+        document.getElementById('digest-body').style.display = '';
+      });
+    }
+  }
+
   loadTopics();
+  loadDigest();
   loadEntries(false);
   loadChart();
 </script>

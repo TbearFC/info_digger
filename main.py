@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -25,6 +26,10 @@ logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
 scheduler = AsyncIOScheduler()
+
+# ── Digest cache (avoids repeat Claude calls within 1h) ──────────────────────
+_digest_cache: dict = {}   # keys: "data", "ts"
+_DIGEST_TTL = 3600         # seconds
 
 
 @asynccontextmanager
@@ -171,6 +176,64 @@ async def api_ask(req: AskRequest):
         for e in entries[:limit]
     ]
     return JSONResponse({"answer": answer, "sources": sources})
+
+
+# ── Daily digest ─────────────────────────────────────────────────────────────
+
+@app.get("/api/digest")
+async def api_digest(hours: int = Query(24, ge=1, le=168)):
+    global _digest_cache
+
+    # Serve cached result if fresh
+    if _digest_cache.get("ts") and time.time() - _digest_cache["ts"] < _DIGEST_TTL:
+        return JSONResponse(_digest_cache["data"])
+
+    entries = db.get_digest_entries(hours=hours)
+
+    by_source: dict[str, int] = {}
+    for e in entries:
+        by_source[e["source"]] = by_source.get(e["source"], 0) + 1
+
+    summary = ""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if entries and api_key:
+        lines = []
+        for e in entries[:40]:
+            text = (e.get("summary") or e.get("description") or "")[:200]
+            lines.append(f"[{e['source']}] {e['title']}: {text}")
+        context = "\n".join(lines)
+
+        prompt = (
+            f"以下是过去{hours}小时内收集到的{len(entries)}条AI领域最新动态（来自GitHub、arXiv、"
+            "HuggingFace、以及OpenAI/NVIDIA/Google/Meta等官方博客）。\n\n"
+            f"{context}\n\n"
+            "请用中文写一段简洁的今日AI要点摘要（3~5句话），突出最重要的进展和趋势。"
+        )
+        try:
+            import anthropic
+            client = anthropic.AsyncAnthropic(api_key=api_key)
+            model = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
+            msg = await client.messages.create(
+                model=model,
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            summary = msg.content[0].text.strip()
+            db.log_api_call("digest", success=True)
+        except Exception as exc:
+            logger.warning("digest summary failed: %s", exc)
+            db.log_api_call("digest", success=False, error_msg=str(exc))
+
+    data = {
+        "hours": hours,
+        "count": len(entries),
+        "by_source": by_source,
+        "summary": summary,
+        "entries": entries[:50],
+        "generated_at": db._now_iso(),
+    }
+    _digest_cache = {"data": data, "ts": time.time()}
+    return JSONResponse(data)
 
 
 # ── Static files ─────────────────────────────────────────────────────────────
